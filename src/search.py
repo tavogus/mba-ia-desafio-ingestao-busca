@@ -1,29 +1,35 @@
-PROMPT_TEMPLATE = """
-CONTEXTO:
-{contexto}
+import os
+import logging
+from dotenv import load_dotenv
+from langchain_postgres import PGVector
+from src.ingest import get_embeddings # Reuse embedding logic
 
-REGRAS:
-- Responda somente com base no CONTEXTO.
-- Se a informação não estiver explicitamente no CONTEXTO, responda:
-  "Não tenho informações necessárias para responder sua pergunta."
-- Nunca invente ou use conhecimento externo.
-- Nunca produza opiniões ou interpretações além do que está escrito.
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-EXEMPLOS DE PERGUNTAS FORA DO CONTEXTO:
-Pergunta: "Qual é a capital da França?"
-Resposta: "Não tenho informações necessárias para responder sua pergunta."
+def search(query: str, k: int = 10):
+    load_dotenv()
+    
+    db_url = os.getenv("DATABASE_URL", "postgresql+psycopg://postgres:postgres@localhost:5432/rag")
+    collection_name = os.getenv("PG_VECTOR_COLLECTION_NAME", "document_vectors")
 
-Pergunta: "Quantos clientes temos em 2024?"
-Resposta: "Não tenho informações necessárias para responder sua pergunta."
+    embeddings = get_embeddings()
 
-Pergunta: "Você acha isso bom ou ruim?"
-Resposta: "Não tenho informações necessárias para responder sua pergunta."
+    vector_store = PGVector(
+        embeddings=embeddings,
+        collection_name=collection_name,
+        connection=db_url,
+        use_jsonb=True,
+    )
 
-PERGUNTA DO USUÁRIO:
-{pergunta}
+    logging.info(f"Searching for: '{query}'")
+    results = vector_store.similarity_search_with_score(query, k=k)
+    
+    return results
 
-RESPONDA A "PERGUNTA DO USUÁRIO"
-"""
-
-def search_prompt(question=None):
-    pass
+if __name__ == "__main__":
+    import sys
+    query = sys.argv[1] if len(sys.argv) > 1 else "Qual o faturamento?"
+    results = search(query)
+    for doc, score in results:
+        print(f"Score: {score}\nContent: {doc.page_content}\n---")
