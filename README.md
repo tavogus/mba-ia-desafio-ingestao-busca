@@ -29,11 +29,8 @@ Certifique-se de ter instalado em sua máquina:
    ```
 
 4. **Configure as variáveis de ambiente:**
-   Copie o arquivo de exemplo `.env.example` para `.env`:
-   ```bash
-   cp .env.example .env
-   ```
-   Edite o arquivo `.env` e preencha as chaves de API necessárias (`OPENAI_API_KEY` ou `GOOGLE_API_KEY`). Você pode ajustar outras configurações como o caminho do PDF (`PDF_PATH`) se desejar.
+
+   Edite o arquivo `.env` e preencha as chaves de API necessárias (`GOOGLE_API_KEY`). Você pode ajustar outras configurações como o caminho do PDF (`PDF_PATH`) se desejar.
 
 ## Banco de Dados
 
